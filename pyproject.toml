@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "muscles-benchmarks"
+version = "1.0.0"
+description = "Official benchmark app for Muscles golden path"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+muscles-bench = "muscles_benchmarks.runner:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

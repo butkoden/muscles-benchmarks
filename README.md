@@ -25,3 +25,23 @@ Create a Booking benchmark app that uses:
 - `muscles-cli` nested command arguments;
 - `muscles-sql map_model()` with real Muscles columns;
 - a repeatable command set for local and CI runs.
+
+## Current Stage (Issue #1)
+
+Implemented official baseline Booking benchmark app and runner:
+
+- single use-case reused across API/CLI/SQL/action call shapes;
+- repeatable measurements with `iterations` parameter;
+- JSON output for CI usage.
+
+### Run benchmark
+
+```bash
+muscles-bench --iterations 1000 --json
+```
+
+### Run tests
+
+```bash
+python -m pytest -q
+```
