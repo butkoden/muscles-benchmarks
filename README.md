@@ -44,10 +44,82 @@ Implemented official Booking golden path benchmark and fair matrix baseline:
   - direct ASGI/WSGI contour benchmark;
   - network matrix metadata with contour classification and guardrails.
 
+## Proof-suite Stage (Issue #4)
+
+The benchmark now also acts as an architecture and DX proof-suite. It measures
+whether Muscles keeps one Booking application model across multiple protocol
+projections, not only raw RPS.
+
+Report sections:
+
+- `booking_domain`: canonical Booking actions, schemas, rules, transports and
+  shared use-case calls;
+- `golden_path`: response helpers, docs/OpenAPI aliases, CLI nested args,
+  SQL model mapping;
+- `correctness`: action dispatch, validation errors, permission/rules and
+  inspect contract checks;
+- `architecture`: shared use case, duplicated business logic count, projection
+  count and architecture score;
+- `dx`: source/DX-oriented metrics for vibe-coding and AI-assisted changes;
+- `streaming`: SSE heartbeat/user-event/backpressure checks;
+- `observability`: OTel disabled/enabled lifecycle overhead;
+- `transactions`: SQL commit/rollback behavior;
+- `contours`: benchmark fairness contour taxonomy;
+- `thresholds`: CI-friendly regression gate.
+
+Contours are intentionally explicit:
+
+```text
+direct-no-network
+in-process-adapter
+network-prod
+network-dev-reference
+subprocess-cli
+cold-start
+stream-transport
+observability
+transaction
+```
+
+This keeps comparisons honest: rows from different contours should not be
+compared as if they measured the same thing.
+
+### Multi-context contract checks
+
+The benchmark app model is intentionally exercised through multiple entrypoint
+profiles, all backed by one action model:
+
+```python
+from muscles import ApplicationMeta, Context
+from muscles.cli import CliStrategy
+from muscles.asgi import AsgiStrategy
+from muscles_mcp import McpStrategy
+
+
+class BookingBenchApp(metaclass=ApplicationMeta):
+    asgi_public = Context(AsgiStrategy, transport="asgi", params={"profile": "public"})
+    asgi_admin = Context(AsgiStrategy, transport="asgi", params={"profile": "admin"})
+
+    cli = Context(CliStrategy, transport="cli")
+
+    mcp_public = Context(McpStrategy, transport=asgi_public, params={"mcp_profile": "public"})
+    mcp_private = Context(McpStrategy, transport=asgi_admin, params={"mcp_profile": "private"})
+```
+
+`McpStrategy` contexts can bind to concrete ASGI profiles through
+`transport=<entrypoint_context>`, while contract discovery and action registration
+remain one for all projections.
+
 ### Run benchmark
 
 ```bash
 muscles-bench --iterations 1000 --json
+```
+
+Local source checkout example:
+
+```bash
+PYTHONPATH=src python -m muscles_benchmarks.runner --iterations 10 --json
 ```
 
 ### Run tests
