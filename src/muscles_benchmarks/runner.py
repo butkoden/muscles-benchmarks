@@ -8,11 +8,20 @@ from statistics import mean
 from time import perf_counter
 
 from .golden_path import (
+    benchmark_architecture_metrics,
+    benchmark_booking_domain_alignment,
     benchmark_cli_nested_limit,
     benchmark_core_responses,
+    benchmark_correctness_checks,
     benchmark_direct_matrix,
+    benchmark_dx_metrics,
+    benchmark_otel_overhead,
     benchmark_openapi_docs_aliases,
+    benchmark_sql_transaction,
     benchmark_sql_map_model,
+    benchmark_sse_stream,
+    build_contour_matrix,
+    evaluate_thresholds,
 )
 
 
@@ -53,7 +62,7 @@ def build_network_matrix() -> dict:
 
 
 def run_benchmarks(iterations: int = 100) -> dict:
-    return {
+    report = {
         "iterations": iterations,
         "metadata": {
             "python": platform.python_version(),
@@ -63,19 +72,43 @@ def run_benchmarks(iterations: int = 100) -> dict:
                 "muscles-sql": _pkg_version("muscles-sql"),
                 "muscles-asgi": _pkg_version("muscles-asgi"),
                 "muscles-wsgi": _pkg_version("muscles-wsgi"),
+                "muscles-sse": _pkg_version("muscles-sse"),
+                "muscles-otel": _pkg_version("muscles-otel"),
             },
         },
+        "booking_domain": _measure(benchmark_booking_domain_alignment, iterations),
         "golden_path": {
             "responses": _measure(benchmark_core_responses, iterations),
             "openapi_docs_aliases": _measure(benchmark_openapi_docs_aliases, iterations),
             "cli_nested_limit": _measure(benchmark_cli_nested_limit, iterations),
             "sql_map_model": _measure(benchmark_sql_map_model, iterations),
         },
+        "correctness": {
+            "action_dispatch": _measure(benchmark_correctness_checks, iterations),
+        },
+        "architecture": {
+            "metrics": _measure(benchmark_architecture_metrics, iterations),
+        },
+        "dx": {
+            "metrics": _measure(benchmark_dx_metrics, iterations),
+        },
+        "streaming": {
+            "sse": _measure(benchmark_sse_stream, iterations),
+        },
+        "observability": {
+            "otel": _measure(benchmark_otel_overhead, iterations),
+        },
+        "transactions": {
+            "sql": _measure(benchmark_sql_transaction, iterations),
+        },
+        "contours": build_contour_matrix(),
         "matrix": {
             "direct": _measure(benchmark_direct_matrix, iterations),
             "network": build_network_matrix(),
         },
     }
+    report["thresholds"] = evaluate_thresholds(report)
+    return report
 
 
 def main() -> None:
@@ -89,8 +122,12 @@ def main() -> None:
         return
     print("Muscles Golden Path Benchmark")
     print(f"iterations={report['iterations']}")
+    print(f"thresholds_passed={report['thresholds']['passed']}")
     for key, row in report["golden_path"].items():
         print(f"{key}: avg={row['avg_ms']}ms min={row['min_ms']}ms max={row['max_ms']}ms")
+    for section in ("correctness", "architecture", "dx", "streaming", "observability", "transactions"):
+        for key, row in report[section].items():
+            print(f"{section}.{key}: avg={row['avg_ms']}ms result={row['result']}")
     direct = report["matrix"]["direct"]
     print(
         "direct-matrix: "
