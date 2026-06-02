@@ -76,9 +76,7 @@ BOOKING_DOMAIN_CONTRACT = {
 
 def _build_booking_action_app(use_case: BookingUseCase):
     bootstrap_workspace_paths()
-    from muscles import ApplicationMeta, Context
-    from muscles.core import _register_action
-    from muscles.core.core.context import BaseStrategy
+    from muscles import ApplicationMeta, BaseStrategy, Context
 
     class Strategy(BaseStrategy):
         def execute(self, *args, **kwargs):
@@ -89,6 +87,16 @@ def _build_booking_action_app(use_case: BookingUseCase):
 
     app = BookingApp()
 
+    @app.action(
+        name="bookings.create",
+        description="Create a booking request",
+        input_schema={
+            "type": "object",
+            "properties": {"title": {"type": "string"}, "email": {"type": "string"}},
+            "required": ["title", "email"],
+        },
+        transports=["http", "cli", "mcp", "jsonrpc"],
+    )
     def create_booking(payload, context):
         booking = use_case.create(payload["title"], payload.get("email", "guest@example.com"))
         return {
@@ -98,6 +106,19 @@ def _build_booking_action_app(use_case: BookingUseCase):
             "transport": context.transport,
         }
 
+    def can_cancel(payload, _context):
+        return payload.get("status") != "cancelled"
+
+    @app.action(
+        name="bookings.cancel",
+        input_schema={
+            "type": "object",
+            "properties": {"booking_id": {"type": "integer"}, "status": {"type": "string"}},
+            "required": ["booking_id", "status"],
+        },
+        rules=[can_cancel],
+        transports=["http", "cli", "mcp", "jsonrpc"],
+    )
     def cancel_booking(payload, _context):
         booking = Booking(
             booking_id=payload["booking_id"],
@@ -108,32 +129,6 @@ def _build_booking_action_app(use_case: BookingUseCase):
         cancelled = use_case.cancel(booking)
         return {"booking_id": cancelled.booking_id, "status": cancelled.status}
 
-    def can_cancel(payload, _context):
-        return payload.get("status") != "cancelled"
-
-    _register_action(
-        app,
-        name="bookings.create",
-        input_schema={
-            "type": "object",
-            "properties": {"title": {"type": "string"}, "email": {"type": "string"}},
-            "required": ["title", "email"],
-        },
-        transports=["http", "cli", "mcp", "jsonrpc"],
-        handler=create_booking,
-    )
-    _register_action(
-        app,
-        name="bookings.cancel",
-        input_schema={
-            "type": "object",
-            "properties": {"booking_id": {"type": "integer"}, "status": {"type": "string"}},
-            "required": ["booking_id", "status"],
-        },
-        rules=[can_cancel],
-        transports=["http", "cli", "mcp", "jsonrpc"],
-        handler=cancel_booking,
-    )
     return app
 
 

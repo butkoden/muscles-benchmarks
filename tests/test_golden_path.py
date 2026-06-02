@@ -100,16 +100,18 @@ def test_benchmark_contract_reports_transport_linked_contexts():
             return kwargs
 
     class _App(metaclass=ApplicationMeta):
-        context = Context(_Strategy, transport="http", params={})
-        asgi_public = Context(_Strategy, transport="asgi", params={"profile": "public"})
+        context = Context(_Strategy)
+        asgi_public = Context(_Strategy, params={"profile": "public"})
+        asgi_admin = Context(_Strategy, params={"profile": "admin"})
         mcp_public = Context(_Strategy, transport=asgi_public, params={"mcp_profile": "public"})
-        mcp_admin = Context(_Strategy, transport="mcp-admin")
+        mcp_admin = Context(_Strategy, transport=asgi_admin, params={"mcp_profile": "admin"})
 
     app = _App()
     contract = inspect_application(app)
     by_name = {item["name"]: item for item in contract["contexts"]}
 
-    assert set(by_name) == {"context", "asgi_public", "mcp_public", "mcp_admin"}
+    assert set(by_name) == {"context", "asgi_public", "asgi_admin", "mcp_public", "mcp_admin"}
+    assert by_name["mcp_admin"]["transport"] == "asgi_admin"
     assert by_name["mcp_public"]["transport"] == "asgi_public"
-    assert by_name["mcp_admin"]["transport"] == "mcp-admin"
+    assert by_name["mcp_admin"]["transport"] == "asgi_admin"
     assert by_name["context"]["strategy"] == "_Strategy"
