@@ -76,7 +76,8 @@ BOOKING_DOMAIN_CONTRACT = {
 
 def _build_booking_action_app(use_case: BookingUseCase):
     bootstrap_workspace_paths()
-    from muscles import ApplicationMeta, Context, register_action
+    from muscles import ApplicationMeta, Context
+    from muscles.core import _register_action
     from muscles.core.core.context import BaseStrategy
 
     class Strategy(BaseStrategy):
@@ -110,7 +111,7 @@ def _build_booking_action_app(use_case: BookingUseCase):
     def can_cancel(payload, _context):
         return payload.get("status") != "cancelled"
 
-    register_action(
+    _register_action(
         app,
         name="bookings.create",
         input_schema={
@@ -121,7 +122,7 @@ def _build_booking_action_app(use_case: BookingUseCase):
         transports=["http", "cli", "mcp", "jsonrpc"],
         handler=create_booking,
     )
-    register_action(
+    _register_action(
         app,
         name="bookings.cancel",
         input_schema={
@@ -221,7 +222,7 @@ def benchmark_cli_nested_limit() -> dict:
     command_prefix = f"bench_bookings_{uuid.uuid4().hex[:8]}"
 
     class App(metaclass=ApplicationMeta):
-        context = Context(CliStrategy, transport="cli")
+        context = Context(CliStrategy)
         console = Console()
 
         def run(self, *args):

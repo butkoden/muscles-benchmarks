@@ -97,10 +97,10 @@ from muscles_mcp import McpStrategy
 
 
 class BookingBenchApp(metaclass=ApplicationMeta):
-    asgi_public = Context(AsgiStrategy, transport="asgi", params={"profile": "public"})
-    asgi_admin = Context(AsgiStrategy, transport="asgi", params={"profile": "admin"})
+    asgi_public = Context(AsgiStrategy, params={"profile": "public"})
+    asgi_admin = Context(AsgiStrategy, params={"profile": "admin"})
 
-    cli = Context(CliStrategy, transport="cli")
+    cli = Context(CliStrategy)
 
     mcp_public = Context(McpStrategy, transport=asgi_public, params={"mcp_profile": "public"})
     mcp_private = Context(McpStrategy, transport=asgi_admin, params={"mcp_profile": "private"})
