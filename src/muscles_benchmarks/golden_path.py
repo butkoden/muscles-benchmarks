@@ -70,7 +70,7 @@ BOOKING_DOMAIN_CONTRACT = {
     "actions": ["bookings.create", "bookings.list", "bookings.cancel", "bookings.export"],
     "schemas": ["BookingCreate", "BookingRead", "BookingStatusUpdate", "BookingExportEvent"],
     "rules": ["bookings.public_create", "bookings.can_cancel"],
-    "transports": ["http", "cli", "mcp", "jsonrpc", "sse"],
+    "protocols": ["http", "cli", "mcp", "jsonrpc", "sse"],
 }
 
 
@@ -300,7 +300,7 @@ def benchmark_booking_domain_alignment() -> dict:
         "actions": len(BOOKING_DOMAIN_CONTRACT["actions"]),
         "schemas": len(BOOKING_DOMAIN_CONTRACT["schemas"]),
         "rules": len(BOOKING_DOMAIN_CONTRACT["rules"]),
-        "transports": len(BOOKING_DOMAIN_CONTRACT["transports"]),
+        "protocols": len(BOOKING_DOMAIN_CONTRACT["protocols"]),
         "shared_use_case_calls": len(use_case.calls),
         "call_actions": sorted({name for name, _payload in use_case.calls}),
         "projection_calls": projection_calls,
@@ -382,7 +382,7 @@ def benchmark_dx_metrics() -> dict:
     score += 20 if len(contract["actions"]) >= 4 else 0
     score += 20 if len(contract["schemas"]) >= 4 else 0
     score += 20 if len(contract["rules"]) >= 2 else 0
-    score += 20 if len(contract["transports"]) >= 5 else 0
+    score += 20 if len(contract["protocols"]) >= 5 else 0
     score += 20 if correctness["inspect_source_of_truth"] else 0
     return {
         "files": 1,
@@ -390,7 +390,7 @@ def benchmark_dx_metrics() -> dict:
         "action_count": len(contract["actions"]),
         "schema_count": len(contract["schemas"]),
         "rule_count": len(contract["rules"]),
-        "transport_count": len(contract["transports"]),
+        "protocol_count": len(contract["protocols"]),
         "machine_readable_introspection": True,
         "ai_change_tasks": ai_change_tasks,
         "score": score,

@@ -54,7 +54,7 @@ def test_booking_domain_alignment_uses_shared_use_case():
     result = benchmark_booking_domain_alignment()
     assert result["domain"] == "booking"
     assert result["actions"] >= 4
-    assert result["transports"] >= 5
+    assert result["protocols"] >= 5
     assert result["shared_use_case_calls"] == 4
     assert result["call_actions"] == ["bookings.create"]
 
