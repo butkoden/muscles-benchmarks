@@ -183,21 +183,19 @@ def benchmark_openapi_docs_aliases() -> dict:
 
     bootstrap_workspace_paths()
     from muscles.asgi.restful import RestApi as AsgiRestApi
-    from muscles.asgi.asgi.routers import routes as asgi_routes
     from muscles.wsgi.restful import RestApi as WsgiRestApi
-    from muscles.wsgi.wsgi.routers import routes as wsgi_routes
 
     suffix = uuid.uuid4().hex[:8]
-    AsgiRestApi(prefix=f"/api/{suffix}", name=f"api-asgi-{suffix}", title="ASGI API")
-    WsgiRestApi(prefix=f"/api/{suffix}", name=f"api-wsgi-{suffix}", title="WSGI API")
+    asgi_api = AsgiRestApi(prefix=f"/api/{suffix}", name=f"api-asgi-{suffix}", title="ASGI API")
+    wsgi_api = WsgiRestApi(prefix=f"/api/{suffix}", name=f"api-wsgi-{suffix}", title="WSGI API")
 
     req_docs = SimpleNamespace(path="/docs", method="GET", content_type="text/html")
     req_openapi = SimpleNamespace(path="/openapi.json", method="GET", content_type="application/json")
 
-    asgi_docs, _ = asgi_routes.get_current_route(req_docs)
-    asgi_openapi, _ = asgi_routes.get_current_route(req_openapi)
-    wsgi_docs, _ = wsgi_routes.get_current_route(req_docs)
-    wsgi_openapi, _ = wsgi_routes.get_current_route(req_openapi)
+    asgi_docs, _ = asgi_api.get_current_route(req_docs)
+    asgi_openapi, _ = asgi_api.get_current_route(req_openapi)
+    wsgi_docs, _ = wsgi_api.get_current_route(req_docs)
+    wsgi_openapi, _ = wsgi_api.get_current_route(req_openapi)
     _OPENAPI_DOCS_ALIAS_RESULT = {
         "asgi_docs": bool(asgi_docs),
         "asgi_openapi": bool(asgi_openapi),
@@ -263,12 +261,15 @@ def benchmark_sql_map_model() -> dict:
 
 def benchmark_direct_matrix() -> dict:
     bootstrap_workspace_paths()
-    from muscles.asgi.asgi.routers import routes as asgi_routes
-    from muscles.wsgi.wsgi.routers import routes as wsgi_routes
+    from muscles.asgi.restful import RestApi as AsgiRestApi
+    from muscles.wsgi.restful import RestApi as WsgiRestApi
 
+    suffix = uuid.uuid4().hex[:8]
+    asgi_api = AsgiRestApi(prefix=f"/direct/{suffix}", name=f"direct-asgi-{suffix}", title="ASGI direct API")
+    wsgi_api = WsgiRestApi(prefix=f"/direct/{suffix}", name=f"direct-wsgi-{suffix}", title="WSGI direct API")
     req = SimpleNamespace(path="/openapi.json", method="GET", content_type="application/json")
-    asgi_route, _ = asgi_routes.get_current_route(req)
-    wsgi_route, _ = wsgi_routes.get_current_route(req)
+    asgi_route, _ = asgi_api.get_current_route(req)
+    wsgi_route, _ = wsgi_api.get_current_route(req)
     return {
         "direct_asgi_router": bool(asgi_route),
         "direct_wsgi_router": bool(wsgi_route),
@@ -422,6 +423,7 @@ def benchmark_sse_stream() -> dict:
     class QuietDispatcher:
         def execute(self, *_args, **_kwargs):
             def source():
+                yield {"event": "heartbeat", "data": {"ok": True}}
                 time.sleep(0.02)
                 yield {"type": "progress", "data": {"done": 1, "total": 1}}
                 yield {"type": "result", "data": {"ok": True}}
@@ -431,7 +433,6 @@ def benchmark_sse_stream() -> dict:
     stream = SseAdapter(
         QuietDispatcher(),
         heartbeat_event="heartbeat",
-        heartbeat_interval_seconds=0.005,
     ).stream_action("bookings.export").stream
     chunks = []
     try:
@@ -462,7 +463,6 @@ def benchmark_sse_stream() -> dict:
     fast_stream = SseAdapter(
         fast_dispatcher,
         heartbeat_event="heartbeat",
-        heartbeat_interval_seconds=1,
     ).stream_action("bookings.export").stream
     try:
         next(iter(fast_stream))
