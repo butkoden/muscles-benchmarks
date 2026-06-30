@@ -26,59 +26,40 @@ Create a Booking benchmark app that uses:
 - `muscles-sql map_model()` with real Muscles columns;
 - a repeatable command set for local and CI runs.
 
-## Current Stage (Issues #1 and #3)
+## Current Stage
 
-Implemented official Booking golden path benchmark and fair matrix baseline:
-
-- shared booking use case reused across surfaces;
-- real `muscles.core` response helpers:
-  - `JsonResponse`
-  - `HtmlResponse`
-- real `/docs` and `/openapi.json` alias checks for both ASGI and WSGI routers;
-- real nested CLI command arguments through `muscles-cli` group owner:
-  - `--limit 3`
-  - `--limit=3`
-- real `muscles-sql map_model()` path with `muscles.Column(Integer/String/DateTime)`,
-  autoincrement PK, insert without explicit id;
-- fair matrix section:
-  - direct ASGI/WSGI contour benchmark;
-  - network matrix metadata with contour classification and guardrails.
-
-## Proof-suite Stage (Issue #4)
-
-The benchmark now also acts as an architecture and DX proof-suite. It measures
-whether Muscles keeps one Booking application model across multiple protocol
-projections, not only raw RPS.
+The benchmark is intentionally lightweight. It does not use special benchmark
+optimizations, hidden caches or production network servers. Each row runs a
+small real framework scenario through the public APIs and reports plain
+avg/min/max timings.
 
 Report sections:
 
-- `booking_domain`: canonical Booking actions, schemas, rules, transports and
-  shared use-case calls;
-- `golden_path`: response helpers, docs/OpenAPI aliases, CLI nested args,
-  SQL model mapping;
-- `correctness`: action dispatch, validation errors, permission/rules and
-  inspect contract checks;
-- `architecture`: shared use case, duplicated business logic count, projection
-  count and architecture score;
-- `dx`: source/DX-oriented metrics for vibe-coding and AI-assisted changes;
-- `streaming`: SSE heartbeat/user-event/backpressure checks;
-- `observability`: OTel disabled/enabled lifecycle overhead;
-- `transactions`: SQL commit/rollback behavior;
-- `contours`: benchmark fairness contour taxonomy;
+- `core`: response helpers (`JsonResponse`, `HtmlResponse`, `BytesResponse`,
+  `NoContentResponse`);
+- `web`: ASGI and WSGI pages, API `GET`, API `POST`, and OpenAPI schema checks
+  measured separately;
+- `data`: no-SQL use case, no-SQL action dispatch, SQL `map_model()`, and SQL
+  transaction rollback;
+- `cli`: nested `muscles-cli` command arguments;
+- `adapters`: MCP, JSON-RPC, SSE, and OTel adapter paths;
+- `contracts`: inspect contract, correctness, architecture, and DX sanity
+  checks;
+- `contours`: fairness labels explaining which rows can be compared;
 - `thresholds`: CI-friendly regression gate.
 
 Contours are intentionally explicit:
 
 ```text
-direct-no-network
-in-process-adapter
-network-prod
-network-dev-reference
-subprocess-cli
-cold-start
+in-process-asgi
+in-process-wsgi
+in-process-api
+no-sql
+sql-memory
+cli-in-process
+adapter-in-process
 stream-transport
 observability
-transaction
 ```
 
 This keeps comparisons honest: rows from different contours should not be
@@ -119,11 +100,11 @@ muscles-bench --iterations 1000 --json
 Local source checkout example:
 
 ```bash
-PYTHONPATH=src python -m muscles_benchmarks.runner --iterations 10 --json
+PYTHONPATH=../muscles/src:../muscles-asgi/src:../muscles-wsgi/src:../muscles-cli/src:../muscles-sql/src:../muscles-sse/src:../muscles-jsonrpc/src:../muscles-mcp/src:../muscles-otel/src:src python -m muscles_benchmarks.runner --iterations 1000
 ```
 
 ### Run tests
 
 ```bash
-PYTHONPATH=src python -m pytest -q
+PYTHONPATH=../muscles/src:../muscles-asgi/src:../muscles-wsgi/src:../muscles-cli/src:../muscles-sql/src:../muscles-sse/src:../muscles-jsonrpc/src:../muscles-mcp/src:../muscles-otel/src:src python -m pytest -q
 ```

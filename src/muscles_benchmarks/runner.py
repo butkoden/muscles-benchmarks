@@ -9,17 +9,27 @@ from time import perf_counter
 
 from .golden_path import (
     benchmark_architecture_metrics,
-    benchmark_booking_domain_alignment,
     benchmark_cli_nested_limit,
-    benchmark_core_responses,
+    benchmark_asgi_api_get,
+    benchmark_asgi_api_post,
+    benchmark_asgi_openapi_schema,
+    benchmark_asgi_page,
     benchmark_correctness_checks,
-    benchmark_direct_matrix,
     benchmark_dx_metrics,
+    benchmark_inspect_contract,
+    benchmark_jsonrpc_call,
+    benchmark_mcp_call_tool,
+    benchmark_no_sql_action_dispatch,
+    benchmark_no_sql_use_case,
     benchmark_otel_overhead,
-    benchmark_openapi_docs_aliases,
-    benchmark_sql_transaction,
+    benchmark_response_helpers,
     benchmark_sql_map_model,
+    benchmark_sql_transaction,
     benchmark_sse_stream,
+    benchmark_wsgi_api_get,
+    benchmark_wsgi_api_post,
+    benchmark_wsgi_openapi_schema,
+    benchmark_wsgi_page,
     build_contour_matrix,
     evaluate_thresholds,
 )
@@ -76,39 +86,54 @@ def run_benchmarks(iterations: int = 100) -> dict:
                 "muscles-otel": _pkg_version("muscles-otel"),
             },
         },
-        "booking_domain": _measure(benchmark_booking_domain_alignment, iterations),
-        "golden_path": {
-            "responses": _measure(benchmark_core_responses, iterations),
-            "openapi_docs_aliases": _measure(benchmark_openapi_docs_aliases, iterations),
-            "cli_nested_limit": _measure(benchmark_cli_nested_limit, iterations),
+        "core": {
+            "response_helpers": _measure(benchmark_response_helpers, iterations),
+        },
+        "web": {
+            "asgi_page": _measure(benchmark_asgi_page, iterations),
+            "wsgi_page": _measure(benchmark_wsgi_page, iterations),
+            "asgi_api_get": _measure(benchmark_asgi_api_get, iterations),
+            "wsgi_api_get": _measure(benchmark_wsgi_api_get, iterations),
+            "asgi_api_post": _measure(benchmark_asgi_api_post, iterations),
+            "wsgi_api_post": _measure(benchmark_wsgi_api_post, iterations),
+            "asgi_openapi_schema": _measure(benchmark_asgi_openapi_schema, iterations),
+            "wsgi_openapi_schema": _measure(benchmark_wsgi_openapi_schema, iterations),
+        },
+        "data": {
+            "no_sql_use_case": _measure(benchmark_no_sql_use_case, iterations),
+            "no_sql_action_dispatch": _measure(benchmark_no_sql_action_dispatch, iterations),
             "sql_map_model": _measure(benchmark_sql_map_model, iterations),
+            "sql_transaction": _measure(benchmark_sql_transaction, iterations),
         },
-        "correctness": {
-            "action_dispatch": _measure(benchmark_correctness_checks, iterations),
+        "cli": {
+            "nested_limit": _measure(benchmark_cli_nested_limit, iterations),
         },
-        "architecture": {
-            "metrics": _measure(benchmark_architecture_metrics, iterations),
-        },
-        "dx": {
-            "metrics": _measure(benchmark_dx_metrics, iterations),
-        },
-        "streaming": {
-            "sse": _measure(benchmark_sse_stream, iterations),
-        },
-        "observability": {
+        "adapters": {
+            "mcp_call_tool": _measure(benchmark_mcp_call_tool, iterations),
+            "jsonrpc_call": _measure(benchmark_jsonrpc_call, iterations),
+            "sse_stream": _measure(benchmark_sse_stream, iterations),
             "otel": _measure(benchmark_otel_overhead, iterations),
         },
-        "transactions": {
-            "sql": _measure(benchmark_sql_transaction, iterations),
+        "contracts": {
+            "inspect": _measure(benchmark_inspect_contract, iterations),
+            "correctness": _measure(benchmark_correctness_checks, iterations),
+            "architecture": _measure(benchmark_architecture_metrics, iterations),
+            "dx": _measure(benchmark_dx_metrics, iterations),
         },
         "contours": build_contour_matrix(),
-        "matrix": {
-            "direct": _measure(benchmark_direct_matrix, iterations),
-            "network": build_network_matrix(),
-        },
+        "network_matrix": build_network_matrix(),
     }
     report["thresholds"] = evaluate_thresholds(report)
     return report
+
+
+def _print_section(title: str, rows: dict) -> None:
+    print(title)
+    for key, row in rows.items():
+        print(
+            f"  {key}: avg={row['avg_ms']}ms min={row['min_ms']}ms max={row['max_ms']}ms "
+            f"result={row['result']}"
+        )
 
 
 def main() -> None:
@@ -120,19 +145,15 @@ def main() -> None:
     if args.json:
         print(json.dumps(report, ensure_ascii=False))
         return
-    print("Muscles Golden Path Benchmark")
+    print("Muscles Lightweight Benchmark Matrix")
     print(f"iterations={report['iterations']}")
     print(f"thresholds_passed={report['thresholds']['passed']}")
-    for key, row in report["golden_path"].items():
-        print(f"{key}: avg={row['avg_ms']}ms min={row['min_ms']}ms max={row['max_ms']}ms")
-    for section in ("correctness", "architecture", "dx", "streaming", "observability", "transactions"):
-        for key, row in report[section].items():
-            print(f"{section}.{key}: avg={row['avg_ms']}ms result={row['result']}")
-    direct = report["matrix"]["direct"]
-    print(
-        "direct-matrix: "
-        f"avg={direct['avg_ms']}ms fair={direct['result']['fair_contour']} contour={direct['result']['contour']}"
-    )
+    _print_section("core", report["core"])
+    _print_section("web", report["web"])
+    _print_section("data", report["data"])
+    _print_section("cli", report["cli"])
+    _print_section("adapters", report["adapters"])
+    _print_section("contracts", report["contracts"])
 
 
 if __name__ == "__main__":
