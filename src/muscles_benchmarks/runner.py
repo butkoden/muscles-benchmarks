@@ -15,6 +15,8 @@ from .golden_path import (
     benchmark_correctness_checks,
     benchmark_direct_matrix,
     benchmark_dx_metrics,
+    benchmark_extension_ai_contract,
+    benchmark_extension_documents_pipeline,
     benchmark_otel_overhead,
     benchmark_openapi_docs_aliases,
     benchmark_sql_transaction,
@@ -74,6 +76,8 @@ def run_benchmarks(iterations: int = 100) -> dict:
                 "muscles-wsgi": _pkg_version("muscles-wsgi"),
                 "muscles-sse": _pkg_version("muscles-sse"),
                 "muscles-otel": _pkg_version("muscles-otel"),
+                "muscles-ai": _pkg_version("muscles-ai"),
+                "muscles-documents": _pkg_version("muscles-documents"),
             },
         },
         "booking_domain": _measure(benchmark_booking_domain_alignment, iterations),
@@ -101,6 +105,10 @@ def run_benchmarks(iterations: int = 100) -> dict:
         "transactions": {
             "sql": _measure(benchmark_sql_transaction, iterations),
         },
+        "extensions": {
+            "ai": _measure(benchmark_extension_ai_contract, iterations),
+            "documents": _measure(benchmark_extension_documents_pipeline, iterations),
+        },
         "contours": build_contour_matrix(),
         "matrix": {
             "direct": _measure(benchmark_direct_matrix, iterations),
@@ -125,7 +133,7 @@ def main() -> None:
     print(f"thresholds_passed={report['thresholds']['passed']}")
     for key, row in report["golden_path"].items():
         print(f"{key}: avg={row['avg_ms']}ms min={row['min_ms']}ms max={row['max_ms']}ms")
-    for section in ("correctness", "architecture", "dx", "streaming", "observability", "transactions"):
+    for section in ("correctness", "architecture", "dx", "streaming", "observability", "transactions", "extensions"):
         for key, row in report[section].items():
             print(f"{section}.{key}: avg={row['avg_ms']}ms result={row['result']}")
     direct = report["matrix"]["direct"]

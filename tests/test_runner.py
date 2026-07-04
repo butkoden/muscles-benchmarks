@@ -15,6 +15,10 @@ def test_benchmark_report_contains_golden_path_and_matrix():
     assert "sse" in report["streaming"]
     assert "otel" in report["observability"]
     assert "sql" in report["transactions"]
+    assert "ai" in report["extensions"]
+    assert "documents" in report["extensions"]
+    assert report["extensions"]["ai"]["result"]["runtime_provider"] == "noop"
+    assert report["extensions"]["documents"]["result"]["request_status"] == "ok"
     assert "thresholds" in report
     assert "direct" in report["matrix"]
     assert "network" in report["matrix"]

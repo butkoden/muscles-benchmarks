@@ -64,6 +64,7 @@ Report sections:
 - `streaming`: SSE heartbeat/user-event/backpressure checks;
 - `observability`: OTel disabled/enabled lifecycle overhead;
 - `transactions`: SQL commit/rollback behavior;
+- `extensions`: `muscles-ai` and `muscles-documents` action coverage;
 - `contours`: benchmark fairness contour taxonomy;
 - `thresholds`: CI-friendly regression gate.
 

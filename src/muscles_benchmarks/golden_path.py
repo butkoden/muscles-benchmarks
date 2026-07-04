@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, datetime
 import inspect
+import tempfile
 from pathlib import Path
 from types import SimpleNamespace
 import sys
@@ -25,6 +26,8 @@ def bootstrap_workspace_paths() -> None:
         root / "muscles-otel" / "src",
         root / "muscles-mcp" / "src",
         root / "muscles-jsonrpc" / "src",
+        root / "muscles-ai" / "src",
+        root / "muscles-documents" / "src",
     ]
     for candidate in candidates:
         path = str(candidate)
@@ -259,6 +262,108 @@ def benchmark_sql_map_model() -> dict:
     return {"inserted_id": booking_id, "rows": len(rows), "autoincrement": table.c.id.autoincrement is True}
 
 
+def benchmark_extension_ai_contract() -> dict:
+    bootstrap_workspace_paths()
+    from muscles import ActionDispatcher
+    from muscles_ai import init_package as init_ai_package
+
+    app = SimpleNamespace()
+    init_ai_package(
+        app,
+        {
+            "key": "ai",
+            "provider": "noop",
+            "model_name": "stub-benchmark",
+            "top_k_default": 2,
+            "top_k_max": 3,
+            "transports": ["cli", "http", "mcp"],
+        },
+    )
+
+    dispatcher = ActionDispatcher(app)
+    ask = dispatcher.execute("ai.ask", {"question": "benchmark", "top_k": 2, "source": "default"})
+    search = dispatcher.execute("ai.search", {"query": "benchmark", "top_k": 2, "source": "default"})
+    sources = dispatcher.execute("ai.sources.list", {})
+    inspect = dispatcher.execute("ai.inspect", {})
+    doctor = dispatcher.execute("ai.doctor", {})
+
+    return {
+        "ask_question": ask.value["question"],
+        "search_query": search.value["query"],
+        "search_hits": len(search.value["hits"]),
+        "sources": sources.value["sources"],
+        "runtime_provider": inspect.value["provider"],
+        "runtime_model": inspect.value["model_name"],
+        "doctor_ok": doctor.value["status"] == "ok",
+    }
+
+
+def benchmark_extension_documents_pipeline() -> dict:
+    bootstrap_workspace_paths()
+    from muscles import ActionDispatcher
+    from muscles_documents import init_package as init_documents_package
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        workspace = Path(temp_dir)
+        source_file = workspace / "readme.md"
+        source_file.write_text(
+            "# Muscles\n\nThis is an integration smoke document with <b>markup</b> and text.\n",
+            encoding="utf-8",
+        )
+        (workspace / "notes.txt").write_text("One\nTwo\nThree", encoding="utf-8")
+
+        app = SimpleNamespace()
+        init_documents_package(
+            app,
+            {
+                "key": "documents",
+                "chunk_size": 14,
+                "chunk_overlap": 0,
+                "sources": {
+                    "repo": {
+                        "type": "local",
+                        "path": str(workspace),
+                    }
+                },
+            },
+        )
+
+        dispatcher = ActionDispatcher(app)
+        sources = dispatcher.execute("documents.sources.list", {"source": "repo"})
+        inspected = dispatcher.execute("documents.source.inspect", {"source": "repo"})
+        loaded = dispatcher.execute("documents.load", {"source": "repo", "reference": source_file.name})
+        parsed = dispatcher.execute(
+            "documents.parse",
+            {
+                "source": source_file.name,
+                "reference": source_file.as_posix(),
+                "text": source_file.read_text(encoding="utf-8"),
+                "parser": "html",
+            },
+        )
+        chunks = dispatcher.execute(
+            "documents.chunk",
+            {
+                "source": source_file.name,
+                "reference": source_file.as_posix(),
+                "text": source_file.read_text(encoding="utf-8"),
+            },
+        )
+        plan = dispatcher.execute("documents.sync.plan", {})
+        request = dispatcher.execute("documents.sync.request", {"source": "repo"})
+
+    return {
+        "sources": sources.value["sources"],
+        "source_ready": inspected.value["status"] == "ready",
+        "loaded_count": loaded.value["count"],
+        "parsed_text": parsed.value["text"],
+        "chunks": len(chunks.value["chunks"]),
+        "plans": len(plan.value["plans"]),
+        "request_status": request.value["status"],
+        "request_operations": request.value["operations"],
+    }
+
+
 def benchmark_direct_matrix() -> dict:
     bootstrap_workspace_paths()
     from muscles.asgi.restful import RestApi as AsgiRestApi
@@ -423,9 +528,8 @@ def benchmark_sse_stream() -> dict:
     class QuietDispatcher:
         def execute(self, *_args, **_kwargs):
             def source():
-                yield {"event": "heartbeat", "data": {"ok": True}}
-                time.sleep(0.02)
                 yield {"type": "progress", "data": {"done": 1, "total": 1}}
+                time.sleep(0.02)
                 yield {"type": "result", "data": {"ok": True}}
 
             return source()
@@ -437,13 +541,13 @@ def benchmark_sse_stream() -> dict:
     chunks = []
     try:
         iterator = iter(stream)
-        for _ in range(10):
+        for _ in range(12):
             try:
                 chunk = next(iterator)
             except StopIteration:
                 break
             chunks.append(chunk)
-            if "event: progress" in chunk:
+            if "event: result" in chunk:
                 break
     finally:
         stream.close()
@@ -472,7 +576,7 @@ def benchmark_sse_stream() -> dict:
         fast_stream.close()
 
     return {
-        "first_event_is_heartbeat": bool(chunks) and "event: heartbeat" in chunks[0],
+        "first_event_is_heartbeat": any("event: heartbeat" in chunk for chunk in chunks[:2]),
         "user_event_preserved": any("event: progress" in chunk for chunk in chunks),
         "chunks_seen": len(chunks),
         "read_ahead": read_ahead,
@@ -543,6 +647,10 @@ def evaluate_thresholds(report: dict) -> dict:
         "openapi_docs": all(report["golden_path"]["openapi_docs_aliases"]["result"].values()),
         "cli_nested_args": report["golden_path"]["cli_nested_limit"]["result"] == {"space_form": 3, "equals_form": 3},
         "sql_map_model": report["golden_path"]["sql_map_model"]["result"]["autoincrement"] is True,
+        "extension_ai": report["extensions"]["ai"]["result"]["doctor_ok"] is True
+        and report["extensions"]["ai"]["result"]["runtime_provider"] == "noop",
+        "extension_documents": report["extensions"]["documents"]["result"]["request_status"] == "ok"
+        and report["extensions"]["documents"]["result"]["source_ready"] is True,
         "correctness": all(
             [
                 report["correctness"]["action_dispatch"]["result"]["action_dispatch"],

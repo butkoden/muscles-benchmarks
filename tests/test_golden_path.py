@@ -2,6 +2,8 @@ from muscles_benchmarks.golden_path import (
     benchmark_architecture_metrics,
     benchmark_booking_domain_alignment,
     benchmark_cli_nested_limit,
+    benchmark_extension_ai_contract,
+    benchmark_extension_documents_pipeline,
     benchmark_core_responses,
     benchmark_correctness_checks,
     benchmark_direct_matrix,
@@ -115,3 +117,22 @@ def test_benchmark_contract_reports_transport_linked_contexts():
     assert by_name["mcp_public"]["transport"] == "asgi_public"
     assert by_name["mcp_admin"]["transport"] == "asgi_admin"
     assert by_name["context"]["strategy"] == "_Strategy"
+
+
+def test_ai_extension_benchmark_contract():
+    result = benchmark_extension_ai_contract()
+    assert result["ask_question"] == "benchmark"
+    assert result["search_query"] == "benchmark"
+    assert result["search_hits"] == 2
+    assert result["runtime_provider"] == "noop"
+    assert result["runtime_model"] == "stub-benchmark"
+    assert result["doctor_ok"] is True
+
+
+def test_documents_extension_benchmark_pipeline():
+    result = benchmark_extension_documents_pipeline()
+    assert result["source_ready"] is True
+    assert result["loaded_count"] >= 1
+    assert result["chunks"] >= 1
+    assert "Muscles" in result["parsed_text"]
+    assert result["request_status"] == "ok"
