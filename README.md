@@ -6,6 +6,13 @@ This repository must measure the canonical Muscles golden path, not random local
 experiments. Benchmarks must use public APIs exactly as users and AI agents are
 expected to use them.
 
+## Related Repositories
+
+- [`muscles`](https://github.com/butkoden/muscles) - core contracts and canonical documentation.
+- [`muscles-asgi`](https://github.com/butkoden/muscles-asgi), [`muscles-wsgi`](https://github.com/butkoden/muscles-wsgi), [`muscles-cli`](https://github.com/butkoden/muscles-cli) - runtime surfaces covered by the golden path.
+- [`muscles-jsonrpc`](https://github.com/butkoden/muscles-jsonrpc), [`muscles-sse`](https://github.com/butkoden/muscles-sse), [`muscles-mcp`](https://github.com/butkoden/muscles-mcp) - protocol projections covered by architecture checks as they mature.
+- [`muscles-sql`](https://github.com/butkoden/muscles-sql), [`muscles-otel`](https://github.com/butkoden/muscles-otel), [`muscles-documents`](https://github.com/butkoden/muscles-documents), [`muscles-ai`](https://github.com/butkoden/muscles-ai) - extension surfaces covered by regression checks.
+
 ## Concept Guardrails
 
 - Muscles is one application model with multiple ways to speak to it.
