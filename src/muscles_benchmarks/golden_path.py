@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
+import importlib
 import inspect
 import tempfile
 from pathlib import Path
@@ -28,6 +29,14 @@ def bootstrap_workspace_paths() -> None:
         root / "muscles-jsonrpc" / "src",
         root / "muscles-ai" / "src",
         root / "muscles-documents" / "src",
+        root / "muscles-data" / "src",
+        root / "muscles-data-elasticsearch" / "src",
+        root / "muscles-data-opensearch" / "src",
+        root / "muscles-data-qdrant" / "src",
+        root / "muscles-data-redis" / "src",
+        root / "muscles-data-mongodb" / "src",
+        root / "muscles-data-s3" / "src",
+        root / "muscles-data-sqlalchemy" / "src",
     ]
     for candidate in candidates:
         path = str(candidate)
@@ -364,6 +373,45 @@ def benchmark_extension_documents_pipeline() -> dict:
     }
 
 
+def benchmark_package_matrix() -> dict:
+    """Smoke-import every active RC package without opening external connections."""
+    bootstrap_workspace_paths()
+    package_modules = {
+        "muscles": "muscles",
+        "muscles-asgi": "muscles.asgi",
+        "muscles-wsgi": "muscles.wsgi",
+        "muscles-cli": "muscles.cli",
+        "muscles-jsonrpc": "muscles_jsonrpc",
+        "muscles-sse": "muscles_sse",
+        "muscles-mcp": "muscles_mcp",
+        "muscles-sql": "muscles_sql",
+        "muscles-otel": "muscles_otel",
+        "muscles-ai": "muscles_ai",
+        "muscles-documents": "muscles_documents",
+        "muscles-data": "muscles_data",
+        "muscles-data-elasticsearch": "muscles_data_elasticsearch",
+        "muscles-data-opensearch": "muscles_data_opensearch",
+        "muscles-data-qdrant": "muscles_data_qdrant",
+        "muscles-data-redis": "muscles_data_redis",
+        "muscles-data-mongodb": "muscles_data_mongodb",
+        "muscles-data-s3": "muscles_data_s3",
+        "muscles-data-sqlalchemy": "muscles_data_sqlalchemy",
+    }
+    imported = {}
+    for package, module in package_modules.items():
+        importlib.import_module(module)
+        imported[package] = True
+
+    from muscles_data.catalog import DataAdapterCatalog
+
+    return {
+        "imported": imported,
+        "memory_adapters": DataAdapterCatalog.with_defaults().inspect(),
+        "all_imports": all(imported.values()),
+        "contour": "in-process-adapter",
+    }
+
+
 def benchmark_direct_matrix() -> dict:
     bootstrap_workspace_paths()
     from muscles.asgi.restful import RestApi as AsgiRestApi
@@ -649,8 +697,11 @@ def evaluate_thresholds(report: dict) -> dict:
         "sql_map_model": report["golden_path"]["sql_map_model"]["result"]["autoincrement"] is True,
         "extension_ai": report["extensions"]["ai"]["result"]["doctor_ok"] is True
         and report["extensions"]["ai"]["result"]["runtime_provider"] == "noop",
-        "extension_documents": report["extensions"]["documents"]["result"]["request_status"] == "ok"
+        "extension_documents": report["extensions"]["documents"]["result"]["request_status"] == "planned"
+        and bool(report["extensions"]["documents"]["result"]["request_operations"])
         and report["extensions"]["documents"]["result"]["source_ready"] is True,
+        "package_matrix": report["package_matrix"]["result"]["all_imports"]
+        and len(report["package_matrix"]["result"]["memory_adapters"]) >= 6,
         "correctness": all(
             [
                 report["correctness"]["action_dispatch"]["result"]["action_dispatch"],

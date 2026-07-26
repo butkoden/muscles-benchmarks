@@ -7,8 +7,27 @@ name = "muscles-benchmarks"
 version = "1.0.0"
 description = "Official benchmark app for Muscles golden path"
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = ["muscles>=1.0.0rc1,<2.0.0"]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0,<9.0",
+]
+ecosystem = [
+  "muscles-ai>=0.1.0,<1.0.0",
+  "muscles-asgi>=1.0.0,<2.0.0",
+  "muscles-cli>=1.0.0,<2.0.0",
+  "muscles-data>=0.1.0,<1.0.0",
+  "muscles-documents>=0.1.0,<1.0.0",
+  "muscles-jsonrpc>=1.0.0,<2.0.0",
+  "muscles-mcp>=1.0.0,<2.0.0",
+  "muscles-otel>=1.0.0,<2.0.0",
+  "muscles-sql>=1.0.0,<2.0.0",
+  "muscles-sse>=1.0.0,<2.0.0",
+  "muscles-wsgi>=1.0.0,<2.0.0",
+]
 
 [project.scripts]
 muscles-bench = "muscles_benchmarks.runner:main"

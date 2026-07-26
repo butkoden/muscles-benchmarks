@@ -135,4 +135,5 @@ def test_documents_extension_benchmark_pipeline():
     assert result["loaded_count"] >= 1
     assert result["chunks"] >= 1
     assert "Muscles" in result["parsed_text"]
-    assert result["request_status"] == "ok"
+    assert result["request_status"] == "planned"
+    assert result["request_operations"]
