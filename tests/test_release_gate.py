@@ -1,10 +1,19 @@
 from __future__ import annotations
 
+import os
 import tomllib
 from pathlib import Path
 
+import pytest
+
 
 ROOT = Path(__file__).resolve().parents[2]
+WORKSPACE_ROOT = Path(os.environ.get("MUSCLES_ECOSYSTEM_ROOT", ROOT.parent))
+
+pytestmark = pytest.mark.skipif(
+    not (WORKSPACE_ROOT / "muscles").exists(),
+    reason="release gate requires the monorepo workspace",
+)
 
 
 def test_core_keeps_test_tools_out_of_runtime_dependencies():
@@ -17,15 +26,15 @@ def test_core_keeps_test_tools_out_of_runtime_dependencies():
 
 
 def test_clean_install_gate_is_documented_and_executable():
-    script = ROOT.parent / "scripts" / "clean-install-smoke.py"
+    script = WORKSPACE_ROOT.parent / "scripts" / "clean-install-smoke.py"
     assert script.exists()
     assert "PYTHONPATH=" not in script.read_text(encoding="utf-8")
 
 
 def test_p0_workflows_cover_ci_build_and_trusted_publishing():
     for package in ("muscles-ai", "muscles-documents", "muscles-data", "muscles-benchmarks"):
-        ci = (ROOT / package / ".github/workflows/ci.yml").read_text(encoding="utf-8")
-        release = (ROOT / package / ".github/workflows/release.yml").read_text(encoding="utf-8")
+        ci = (WORKSPACE_ROOT / package / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+        release = (WORKSPACE_ROOT / package / ".github/workflows/release.yml").read_text(encoding="utf-8")
         assert "pytest" in ci
         assert "python -m build" in ci
         assert "id-token: write" in release
@@ -68,13 +77,13 @@ def test_every_rc_package_has_pr_ci_and_guarded_release_workflow():
 
 
 def test_support_example_declares_explicit_setuptools_discovery():
-    text = (ROOT / "muscular-example" / "pyproject.toml").read_text(encoding="utf-8")
+    text = (WORKSPACE_ROOT / "muscular-example" / "pyproject.toml").read_text(encoding="utf-8")
     assert "setuptools.build_meta" in text
     assert "py-modules = []" in text
 
 
 def test_cli_keeps_namespace_package_layout_for_clean_wheels():
-    text = (ROOT / "muscles-cli" / "pyproject.toml").read_text(encoding="utf-8")
+    text = (WORKSPACE_ROOT / "muscles-cli" / "pyproject.toml").read_text(encoding="utf-8")
 
     assert 'packages = [{include = "muscles", from = "src"}]' in text
     assert 'to = "muscles.cli"' not in text
