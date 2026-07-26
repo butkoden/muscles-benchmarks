@@ -135,3 +135,14 @@ PYTHONPATH=src python -m muscles_benchmarks.runner --iterations 10 --json
 ```bash
 PYTHONPATH=src python -m pytest -q
 ```
+
+The repository-level gate runs every active package in an isolated pytest
+process, so packages with the same test module names cannot collide during
+collection:
+
+```bash
+make ecosystem-test
+```
+
+The gate includes the deprecated compatibility package and the example app as
+smoke checks, but they are not part of the RC publication set.

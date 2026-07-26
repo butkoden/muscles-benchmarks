@@ -19,6 +19,7 @@ from .golden_path import (
     benchmark_extension_documents_pipeline,
     benchmark_otel_overhead,
     benchmark_openapi_docs_aliases,
+    benchmark_package_matrix,
     benchmark_sql_transaction,
     benchmark_sql_map_model,
     benchmark_sse_stream,
@@ -109,6 +110,7 @@ def run_benchmarks(iterations: int = 100) -> dict:
             "ai": _measure(benchmark_extension_ai_contract, iterations),
             "documents": _measure(benchmark_extension_documents_pipeline, iterations),
         },
+        "package_matrix": _measure(benchmark_package_matrix, iterations),
         "contours": build_contour_matrix(),
         "matrix": {
             "direct": _measure(benchmark_direct_matrix, iterations),
@@ -133,7 +135,7 @@ def main() -> None:
     print(f"thresholds_passed={report['thresholds']['passed']}")
     for key, row in report["golden_path"].items():
         print(f"{key}: avg={row['avg_ms']}ms min={row['min_ms']}ms max={row['max_ms']}ms")
-    for section in ("correctness", "architecture", "dx", "streaming", "observability", "transactions", "extensions"):
+    for section in ("correctness", "architecture", "dx", "streaming", "observability", "transactions", "extensions", "package_matrix"):
         for key, row in report[section].items():
             print(f"{section}.{key}: avg={row['avg_ms']}ms result={row['result']}")
     direct = report["matrix"]["direct"]

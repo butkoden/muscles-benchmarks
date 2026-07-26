@@ -18,7 +18,9 @@ def test_benchmark_report_contains_golden_path_and_matrix():
     assert "ai" in report["extensions"]
     assert "documents" in report["extensions"]
     assert report["extensions"]["ai"]["result"]["runtime_provider"] == "noop"
-    assert report["extensions"]["documents"]["result"]["request_status"] == "ok"
+    assert report["extensions"]["documents"]["result"]["request_status"] == "planned"
+    assert report["package_matrix"]["result"]["all_imports"] is True
+    assert len(report["package_matrix"]["result"]["memory_adapters"]) >= 6
     assert "thresholds" in report
     assert "direct" in report["matrix"]
     assert "network" in report["matrix"]
