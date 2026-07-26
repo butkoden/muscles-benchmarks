@@ -7,17 +7,17 @@ import pytest
 
 
 ROOT = Path(__file__).resolve().parents[2]
-WORKSPACE_ROOT = Path(os.environ.get("MUSCLES_ECOSYSTEM_ROOT", ROOT.parent))
+PROJECTS_ROOT = Path(os.environ.get("MUSCLES_ECOSYSTEM_ROOT", ROOT))
 CORE_RANGE = ">=1.0.0rc1,<2.0.0"
 
 pytestmark = pytest.mark.skipif(
-    not (WORKSPACE_ROOT / "muscles").exists(),
+    not (PROJECTS_ROOT / "muscles").exists(),
     reason="packaging matrix requires the monorepo workspace",
 )
 
 
 def _project_text(name: str) -> str:
-    return (WORKSPACE_ROOT / name / "pyproject.toml").read_text(encoding="utf-8")
+    return (PROJECTS_ROOT / name / "pyproject.toml").read_text(encoding="utf-8")
 
 
 def test_rc_packages_use_published_core_range_without_git_dependencies():
