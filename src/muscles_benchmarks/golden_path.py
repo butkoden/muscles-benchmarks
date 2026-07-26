@@ -398,14 +398,22 @@ def benchmark_package_matrix() -> dict:
         "muscles-data-sqlalchemy": "muscles_data_sqlalchemy",
     }
     imported = {}
+    skipped = {}
     for package, module in package_modules.items():
-        importlib.import_module(module)
+        try:
+            importlib.import_module(module)
+        except ModuleNotFoundError as exc:
+            if exc.name != module and not exc.name.startswith(f"{module}."):
+                raise
+            skipped[package] = "not installed in this benchmark workspace"
+            continue
         imported[package] = True
 
     from muscles_data.catalog import DataAdapterCatalog
 
     return {
         "imported": imported,
+        "skipped": skipped,
         "memory_adapters": DataAdapterCatalog.with_defaults().inspect(),
         "all_imports": all(imported.values()),
         "contour": "in-process-adapter",
