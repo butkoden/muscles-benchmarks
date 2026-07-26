@@ -59,6 +59,8 @@ def test_booking_domain_alignment_uses_shared_use_case():
     assert result["protocols"] >= 5
     assert result["shared_use_case_calls"] == 4
     assert result["call_actions"] == ["bookings.create"]
+    assert result["mcp_projection"] is True
+    assert result["jsonrpc_projection"] is True
 
 
 def test_correctness_checks_cover_validation_rules_and_inspect():

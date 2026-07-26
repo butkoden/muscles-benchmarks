@@ -1,0 +1,26 @@
+{
+  "include": ["src"],
+  "exclude": ["src/muscles_benchmarks/golden_path.py"],
+  "extraPaths": [
+    "../muscles/src",
+    "../muscles-asgi/src",
+    "../muscles-wsgi/src",
+    "../muscles-cli/src",
+    "../muscles-jsonrpc/src",
+    "../muscles-mcp/src",
+    "../muscles-sse/src",
+    "../muscles-sql/src",
+    "../muscles-otel/src",
+    "../muscles-ai/src",
+    "../muscles-documents/src",
+    "../muscles-data/src",
+    "../muscles-data-elasticsearch/src",
+    "../muscles-data-opensearch/src",
+    "../muscles-data-qdrant/src",
+    "../muscles-data-redis/src",
+    "../muscles-data-mongodb/src",
+    "../muscles-data-s3/src",
+    "../muscles-data-sqlalchemy/src"
+  ],
+  "typeCheckingMode": "basic"
+}

@@ -461,6 +461,8 @@ def benchmark_booking_domain_alignment() -> dict:
         "projection_count": len(projection_calls),
         "transports_seen": transports_seen,
         "booking_titles": [result["title"] for result in projection_calls.values()],
+        "mcp_projection": projection_calls["mcp"]["title"] == "MCP",
+        "jsonrpc_projection": projection_calls["jsonrpc"]["title"] == "JSON-RPC",
         "same_action_handler": sorted({name for name, _payload in use_case.calls}) == ["bookings.create"],
     }
 
@@ -698,11 +700,21 @@ def build_contour_matrix() -> dict:
 
 
 def evaluate_thresholds(report: dict) -> dict:
+    booking_domain = report["booking_domain"]["result"]
     checks = {
         "responses_contract": report["golden_path"]["responses"]["result"]["json_status"] == 200,
         "openapi_docs": all(report["golden_path"]["openapi_docs_aliases"]["result"].values()),
         "cli_nested_args": report["golden_path"]["cli_nested_limit"]["result"] == {"space_form": 3, "equals_form": 3},
         "sql_map_model": report["golden_path"]["sql_map_model"]["result"]["autoincrement"] is True,
+        "protocol_projections": set(booking_domain["transports_seen"]) >= {
+            "http",
+            "cli",
+            "mcp",
+            "jsonrpc",
+        }
+        and booking_domain["projection_count"] == 4
+        and booking_domain["mcp_projection"]
+        and booking_domain["jsonrpc_projection"],
         "extension_ai": report["extensions"]["ai"]["result"]["doctor_ok"] is True
         and report["extensions"]["ai"]["result"]["runtime_provider"] == "noop",
         "extension_documents": report["extensions"]["documents"]["result"]["request_status"] == "planned"

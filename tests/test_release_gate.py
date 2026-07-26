@@ -30,6 +30,20 @@ def _ecosystem_test_script() -> Path | None:
             return candidate
     return None
 
+
+def _typecheck_script() -> Path | None:
+    for candidate in (
+        PROJECTS_ROOT / "scripts" / "typecheck.sh",
+        PROJECTS_ROOT.parent / "scripts" / "typecheck.sh",
+    ):
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def _root_makefile() -> Path:
+    return PROJECTS_ROOT.parent / "Makefile"
+
 pytestmark = pytest.mark.skipif(
     not (PROJECTS_ROOT / "muscles").exists(),
     reason="release gate requires the monorepo workspace",
@@ -58,6 +72,22 @@ def test_ecosystem_gate_runs_benchmark_suite():
     if script is None:
         pytest.skip("ecosystem gate is provided by the parent workspace")
     assert 'run_package "muscles-benchmarks"' in script.read_text(encoding="utf-8")
+
+
+def test_common_typecheck_gate_covers_benchmark_source():
+    script = _typecheck_script()
+    if script is None:
+        pytest.fail("common typecheck gate must be provided by the workspace")
+    text = script.read_text(encoding="utf-8")
+    assert "muscles-benchmarks/src" in text
+    assert "pyright" in text
+    assert (PROJECTS_ROOT / "muscles-benchmarks" / "pyrightconfig.json").exists()
+
+
+def test_quality_target_runs_tests_and_typecheck():
+    text = _root_makefile().read_text(encoding="utf-8")
+    assert "quality-check: ecosystem-test typecheck" in text
+    assert "typecheck:" in text
 
 
 def test_p0_workflows_cover_ci_build_and_trusted_publishing():

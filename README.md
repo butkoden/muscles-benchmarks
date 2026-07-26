@@ -136,6 +136,17 @@ PYTHONPATH=src python -m muscles_benchmarks.runner --iterations 10 --json
 PYTHONPATH=src python -m pytest -q
 ```
 
+The workspace quality gate runs the benchmark tests and the static baseline:
+
+```bash
+make quality-check
+```
+
+`pyright` checks the package runner/orchestration source through
+`pyrightconfig.json`. The dynamic `golden_path.py` proof-suite is validated by
+the full pytest runtime checks, which exercise optional protocol packages and
+decorator/metaclass APIs that do not have complete static stubs.
+
 The repository-level gate runs every active package in an isolated pytest
 process, so packages with the same test module names cannot collide during
 collection:
