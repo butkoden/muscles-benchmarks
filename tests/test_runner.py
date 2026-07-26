@@ -47,3 +47,9 @@ def test_benchmark_thresholds_pass_for_current_golden_path():
     report = run_benchmarks(iterations=1)
     assert report["thresholds"]["passed"] is True
     assert report["thresholds"]["failed"] == []
+    assert {
+        "protocol_projections",
+        "correctness",
+        "sse_stream",
+        "otel",
+    }.issubset(report["thresholds"]["checks"])
