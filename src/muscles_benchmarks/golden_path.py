@@ -586,8 +586,8 @@ def benchmark_sse_stream() -> dict:
     class QuietDispatcher:
         def execute(self, *_args, **_kwargs):
             def source():
-                yield {"type": "progress", "data": {"done": 1, "total": 1}}
                 time.sleep(0.02)
+                yield {"type": "progress", "data": {"done": 1, "total": 1}}
                 yield {"type": "result", "data": {"ok": True}}
 
             return source()
@@ -595,11 +595,12 @@ def benchmark_sse_stream() -> dict:
     stream = SseAdapter(
         QuietDispatcher(),
         heartbeat_event="heartbeat",
+        heartbeat_interval_seconds=0.001,
     ).stream_action("bookings.export").stream
     chunks = []
     try:
         iterator = iter(stream)
-        for _ in range(12):
+        for _ in range(64):
             try:
                 chunk = next(iterator)
             except StopIteration:
