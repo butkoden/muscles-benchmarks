@@ -11,6 +11,25 @@ license = "MIT"
 requires-python = ">=3.10"
 dependencies = ["muscles>=1.0.0rc1,<2.0.0"]
 
+[project.urls]
+Homepage = "https://github.com/butkoden/muscles-benchmarks"
+Repository = "https://github.com/butkoden/muscles-benchmarks"
+Documentation = "https://github.com/butkoden/muscles-benchmarks#readme"
+PyPI = "https://pypi.org/project/muscles-benchmarks/"
+Releases = "https://github.com/butkoden/muscles-benchmarks/releases"
+"muscles" = "https://pypi.org/project/muscles/"
+"muscles-ai" = "https://pypi.org/project/muscles-ai/"
+"muscles-asgi" = "https://pypi.org/project/muscles-asgi/"
+"muscles-cli" = "https://pypi.org/project/muscles-cli/"
+"muscles-data" = "https://pypi.org/project/muscles-data/"
+"muscles-documents" = "https://pypi.org/project/muscles-documents/"
+"muscles-jsonrpc" = "https://pypi.org/project/muscles-jsonrpc/"
+"muscles-mcp" = "https://pypi.org/project/muscles-mcp/"
+"muscles-otel" = "https://pypi.org/project/muscles-otel/"
+"muscles-sql" = "https://pypi.org/project/muscles-sql/"
+"muscles-sse" = "https://pypi.org/project/muscles-sse/"
+"muscles-wsgi" = "https://pypi.org/project/muscles-wsgi/"
+
 [project.optional-dependencies]
 dev = [
   "pytest>=8.0,<9.0",

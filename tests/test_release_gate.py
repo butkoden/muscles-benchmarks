@@ -135,6 +135,37 @@ def test_every_rc_package_has_pr_ci_and_guarded_release_workflow():
         assert "gh-action-pypi-publish" in release
 
 
+def test_data_adapter_rc_assets_are_present():
+    examples = {
+        "muscles-data-elasticsearch": "example_data_elasticsearch_1",
+        "muscles-data-opensearch": "example_data_opensearch_1",
+        "muscles-data-qdrant": "example_data_qdrant_1",
+        "muscles-data-redis": "example_data_redis_1",
+        "muscles-data-mongodb": "example_data_mongodb_1",
+        "muscles-data-s3": "example_data_s3_1",
+        "muscles-data-sqlalchemy": "example_data_sqlalchemy_1",
+    }
+
+    for package, example in examples.items():
+        package_root = PROJECTS_ROOT / package
+        document = tomllib.loads((package_root / "pyproject.toml").read_text(encoding="utf-8"))
+        dependencies = document["project"]["dependencies"]
+        assert any(dependency.startswith("muscles-data>=0.1.0,<1.0.0") for dependency in dependencies)
+        assert (package_root / "docs/release-candidate.md").exists()
+        assert (package_root / "CHANGELOG.md").exists()
+        ci = (package_root / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+        assert 'python -m pip install --pre "muscles>=1.0.0rc1,<2.0.0" "muscles-data>=0.1.0,<1.0.0"' in ci
+        assert "repository: butkoden/muscles-data" not in ci
+        release = (package_root / ".github/workflows/release.yml").read_text(encoding="utf-8")
+        assert 'python -m pip install --pre "muscles-data>=0.1.0,<1.0.0"' in release
+        assert "repository: butkoden/muscles-data" not in release
+        assert "workflow_dispatch" not in release
+        example_root = PROJECTS_ROOT / "muscular-example" / example
+        assert (example_root / "data_ports.py").exists()
+        readme = (package_root / "README.md").read_text(encoding="utf-8")
+        assert example in readme
+
+
 def test_protocol_and_runtime_workflows_use_versioned_core_artifacts():
     packages = (
         "muscles-asgi",
