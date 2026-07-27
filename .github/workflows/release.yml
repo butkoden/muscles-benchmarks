@@ -3,7 +3,6 @@ name: Release to PyPI
 on:
   release:
     types: [published]
-  workflow_dispatch:
 
 jobs:
   verify:
@@ -13,62 +12,62 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: butkoden/muscles
-          ref: feature/task-57-core-rc-readiness
+          ref: master
           path: muscles
       - uses: actions/checkout@v4
         with:
           repository: butkoden/muscles-ai
-          ref: feature/task-66-ai-rc-readiness
+          ref: master
           path: muscles-ai
       - uses: actions/checkout@v4
         with:
           repository: butkoden/muscles-asgi
-          ref: feature/task-56-ecosystem-rc-readiness
+          ref: master
           path: muscles-asgi
       - uses: actions/checkout@v4
         with:
           repository: butkoden/muscles-wsgi
-          ref: feature/task-56-ecosystem-rc-readiness
+          ref: master
           path: muscles-wsgi
       - uses: actions/checkout@v4
         with:
           repository: butkoden/muscles-cli
-          ref: feature/task-56-ecosystem-rc-readiness
+          ref: master
           path: muscles-cli
       - uses: actions/checkout@v4
         with:
           repository: butkoden/muscles-jsonrpc
-          ref: feature/task-56-ecosystem-rc-readiness
+          ref: master
           path: muscles-jsonrpc
       - uses: actions/checkout@v4
         with:
           repository: butkoden/muscles-mcp
-          ref: feature/task-56-ecosystem-rc-readiness
+          ref: master
           path: muscles-mcp
       - uses: actions/checkout@v4
         with:
           repository: butkoden/muscles-otel
-          ref: feature/task-56-ecosystem-rc-readiness
+          ref: master
           path: muscles-otel
       - uses: actions/checkout@v4
         with:
           repository: butkoden/muscles-sql
-          ref: feature/task-56-ecosystem-rc-readiness
+          ref: master
           path: muscles-sql
       - uses: actions/checkout@v4
         with:
           repository: butkoden/muscles-sse
-          ref: feature/task-56-ecosystem-rc-readiness
+          ref: master
           path: muscles-sse
       - uses: actions/checkout@v4
         with:
           repository: butkoden/muscles-documents
-          ref: feature/task-67-documents-rc-readiness
+          ref: master
           path: muscles-documents
       - uses: actions/checkout@v4
         with:
           repository: butkoden/muscles-data
-          ref: feature/task-68-data-rc-readiness
+          ref: main
           path: muscles-data
       - uses: actions/setup-python@v5
         with:
