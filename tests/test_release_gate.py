@@ -135,6 +135,26 @@ def test_every_rc_package_has_pr_ci_and_guarded_release_workflow():
         assert "gh-action-pypi-publish" in release
 
 
+def test_protocol_and_runtime_workflows_use_versioned_core_artifacts():
+    packages = (
+        "muscles-asgi",
+        "muscles-wsgi",
+        "muscles-cli",
+        "muscles-sql",
+        "muscles-jsonrpc",
+        "muscles-sse",
+        "muscles-mcp",
+        "muscles-otel",
+    )
+
+    for package in packages:
+        for workflow_name in ("ci.yml", "release.yml"):
+            workflow = (ROOT / package / ".github/workflows" / workflow_name).read_text(encoding="utf-8")
+            assert "feature/task-57" not in workflow
+            assert "--pre \"muscles>=1.0.0rc1,<2.0.0\"" in workflow
+            assert "../muscles" not in workflow
+
+
 def test_support_example_declares_explicit_setuptools_discovery():
     text = (PROJECTS_ROOT / "muscular-example" / "pyproject.toml").read_text(encoding="utf-8")
     assert "setuptools.build_meta" in text
