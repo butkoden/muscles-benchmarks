@@ -153,6 +153,9 @@ def test_data_adapter_rc_assets_are_present():
         assert any(dependency.startswith("muscles-data>=0.1.0,<1.0.0") for dependency in dependencies)
         assert (package_root / "docs/release-candidate.md").exists()
         assert (package_root / "CHANGELOG.md").exists()
+        ci = (package_root / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+        assert 'python -m pip install --pre "muscles>=1.0.0rc1,<2.0.0" "muscles-data>=0.1.0,<1.0.0"' in ci
+        assert "repository: butkoden/muscles-data" not in ci
         release = (package_root / ".github/workflows/release.yml").read_text(encoding="utf-8")
         assert 'python -m pip install --pre "muscles-data>=0.1.0,<1.0.0"' in release
         assert "repository: butkoden/muscles-data" not in release
