@@ -33,6 +33,7 @@ Releases = "https://github.com/butkoden/muscles-benchmarks/releases"
 [project.optional-dependencies]
 dev = [
   "pytest>=8.0,<9.0",
+  "tomli>=2.0,<3.0",
 ]
 ecosystem = [
   "muscles-ai>=0.1.0,<1.0.0",

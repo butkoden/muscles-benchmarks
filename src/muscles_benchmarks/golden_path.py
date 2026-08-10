@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 import importlib
 import inspect
 import tempfile
@@ -61,7 +61,12 @@ class BookingUseCase:
     def create(self, title: str, email: str = "guest@example.com") -> Booking:
         payload = {"title": title, "email": email}
         self.calls.append(("bookings.create", payload))
-        booking = Booking(booking_id=self._next_id, title=title, email=email, created_at=datetime.now(UTC))
+        booking = Booking(
+            booking_id=self._next_id,
+            title=title,
+            email=email,
+            created_at=datetime.now(timezone.utc),
+        )
         self._next_id += 1
         return booking
 
@@ -133,7 +138,7 @@ def _build_booking_action_app(use_case: BookingUseCase):
         booking = Booking(
             booking_id=payload["booking_id"],
             title="Existing",
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
             status=payload.get("status", "pending"),
         )
         cancelled = use_case.cancel(booking)
@@ -263,7 +268,7 @@ def benchmark_sql_map_model() -> dict:
     table.metadata.create_all(engine)
     with engine.begin() as conn:
         insert_result = conn.execute(
-            table.insert().values(title="Call", created_at=datetime.now(UTC))
+            table.insert().values(title="Call", created_at=datetime.now(timezone.utc))
         )
         booking_id = insert_result.inserted_primary_key[0]
         rows = list(conn.execute(select(table.c.id)))
