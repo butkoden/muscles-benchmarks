@@ -179,10 +179,15 @@ def test_protocol_and_runtime_workflows_use_versioned_core_artifacts():
     )
 
     for package in packages:
+        core_range = (
+            ">=1.0.0rc5,<2.0.0"
+            if package in {"muscles-asgi", "muscles-wsgi"}
+            else ">=1.0.0rc1,<2.0.0"
+        )
         for workflow_name in ("ci.yml", "release.yml"):
             workflow = (ROOT / package / ".github/workflows" / workflow_name).read_text(encoding="utf-8")
             assert "feature/task-57" not in workflow
-            assert "--pre \"muscles>=1.0.0rc1,<2.0.0\"" in workflow
+            assert f'--pre "muscles{core_range}"' in workflow
             assert "../muscles" not in workflow
 
 

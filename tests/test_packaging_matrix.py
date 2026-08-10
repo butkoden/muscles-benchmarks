@@ -9,6 +9,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 PROJECTS_ROOT = Path(os.environ.get("MUSCLES_ECOSYSTEM_ROOT", ROOT))
 CORE_RANGE = ">=1.0.0rc1,<2.0.0"
+OPENAPI_CORE_RANGE = ">=1.0.0rc5,<2.0.0"
 
 pytestmark = pytest.mark.skipif(
     not (PROJECTS_ROOT / "muscles").exists(),
@@ -35,7 +36,12 @@ def test_rc_packages_use_published_core_range_without_git_dependencies():
         "muscles-wsgi",
     ):
         text = _project_text(name)
-        assert f"muscles{CORE_RANGE}" in text or f'muscles = "{CORE_RANGE}"' in text
+        core_range = (
+            OPENAPI_CORE_RANGE
+            if name in {"muscles-asgi", "muscles-wsgi"}
+            else CORE_RANGE
+        )
+        assert f"muscles{core_range}" in text or f'muscles = "{core_range}"' in text
         assert "git+https://" not in text
 
 
